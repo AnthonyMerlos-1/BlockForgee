@@ -1,0 +1,18 @@
+SOLO RAILWAY — VERSIÓN ORGANIZADA
+
+1. Sube el contenido de Blockforge a GitHub.
+2. Despliega ese repositorio en Railway.
+3. Añade un volumen /data para conservar las cuentas y el dinero.
+4. Genera el dominio público y abre su enlace HTTPS.
+5. Regístrate, entra a tu cuenta y pulsa Multijugador.
+6. Elige mapa y modo en modos.html; el botón te lleva al juego elegido.
+
+Cada eliminación da 10 monedas. El saldo y las compras se comparten
+entre tienda.html y juego.html. Los cuerpos desaparecen y el jugador
+reaparece a los 5 segundos.
+
+No incluye modo local, bots, copias originales ni lanzadores de PC.
+Consulta README.md para los pasos completos y la organización.
+
+Rondas de 5, 10, 16 o 30 minutos. Sonidos en todas las pantallas.
+Resultados con líderes, bajas, monedas y saldo. Revancha en 5 segundos.

@@ -1,0 +1,13 @@
+{
+  "name": "blockforge-railway",
+  "version": "3.3.1",
+  "private": true,
+  "description": "FPS multijugador de personas reales para m\u00f3vil y PC",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

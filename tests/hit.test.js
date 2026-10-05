@@ -1,0 +1,2 @@
+'use strict';const {test}=require('node:test'),assert=require('node:assert/strict'),{playerHit}=require('../server/hit');
+test('Disparos al cuerpo y cabeza impactan; tiros fuera, atrás o fuera de alcance no',()=>{const pos=[0,0,-10];assert.ok(playerHit([0,1,0],[0,0,-1],pos,85));assert.equal(playerHit([0,1.75,0],[0,0,-1],pos,85).head,true);assert.equal(playerHit([0,1,0],[0,0,1],pos,85),null);assert.equal(playerHit([2,1,0],[0,0,-1],pos,85),null);assert.equal(playerHit([0,3,0],[0,0,-1],pos,85),null);assert.equal(playerHit([0,1,0],[0,0,-1],pos,5),null)});

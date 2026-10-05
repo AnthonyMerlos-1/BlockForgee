@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><script src="js/device.js?v=11"></script><style>html.mobile-redirect body{display:none!important}html.phone-device a[href="index.html"]{display:none!important}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PROJECT: SHADOWFRONT - Menú Principal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050608;
+            color: #d0d2d6;
+        }
+
+        /* Lienzo 3D de fondo */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Contenedor principal de la interfaz */
+        .ui-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px 45px;
+            pointer-events: none;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* Cabecera / Logo */
+        header {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-title {
+            font-size: 3.2rem;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: 0 0 25px rgba(255, 69, 0, 0.7), 0 0 10px rgba(0,0,0,0.9);
+        }
+
+        .game-subtitle {
+            font-size: 0.85rem;
+            letter-spacing: 8px;
+            color: #ff5500;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* Menú de Botones Principal */
+        .menu-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 310px;
+            margin-bottom: 10px;
+        }
+
+        .menu-btn {
+            position: relative;
+            background: linear-gradient(135deg, rgba(15, 17, 22, 0.9), rgba(30, 35, 45, 0.9));
+            border: 2px solid #ff5500;
+            color: #ffffff;
+            padding: 14px 22px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            clip-path: polygon(0 0, 93% 0, 100% 30%, 100% 100%, 7% 100%, 0 70%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: #ffaa00;
+            transition: width 0.25s ease;
+        }
+
+        .menu-btn:hover, .menu-btn:active {
+            background: linear-gradient(135deg, rgba(40, 20, 10, 0.95), rgba(255, 85, 0, 0.4));
+            border-color: #ffaa00;
+            color: #ffaa00;
+            transform: translateX(10px);
+            box-shadow: 0 0 25px rgba(255, 85, 0, 0.5);
+        }
+
+        .menu-btn:hover::before {
+            width: 100%;
+            opacity: 0.2;
+        }
+
+        .footer-info {
+            align-self: flex-end;
+            font-size: 0.8rem;
+            color: #ff5500;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(0,0,0,0.9);
+            font-weight: bold;
+        }
+
+        /* --- VENTANAS MODALES / OVERLAYS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 6, 8, 0.88);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, rgba(16, 18, 24, 0.97), rgba(8, 10, 14, 0.99));
+            border: 2px solid #ff5500;
+            width: 92%;
+            max-width: 900px;
+            max-height: 88vh;
+            border-radius: 8px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 40px rgba(255, 85, 0, 0.3);
+            position: relative;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 85, 0, 0.3);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: #ffaa00;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            color: #d0d2d6;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-modal-btn:hover {
+            color: #ff5500;
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        .section-desc {
+            font-size: 0.95rem;
+            color: #9da1aa;
+            margin-bottom: 20px;
+        }
+
+        /* --- DISEÑO AVANZADO ESTILO SHOOTER PARA OPERADORES --- */
+        .operator-hub {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            height: 100%;
+        }
+
+        /* Panel Izquierdo: Ficha del Operador Seleccionado */
+        .operator-profile-card {
+            background: linear-gradient(135deg, rgba(22, 25, 35, 0.9), rgba(10, 12, 18, 0.95));
+            border: 2px solid rgba(255, 85, 0, 0.4);
+            border-radius: 6px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+        }
+
+        .operator-hero-preview {
+            width: 100%;
+            height: 160px;
+            background: radial-gradient(circle, #ff5500 0%, #111 75%);
+            border: 2px solid #ffaa00;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3);
+        }
+
+        .operator-hero-preview::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            z-index: 1;
+        }
+
+        .operator-hero-name {
+            position: relative;
+            z-index: 2;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ff5500;
+        }
+
+        .operator-stats-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #a0a4af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .stat-bar-bg {
+            width: 100%;
+            height: 7px;
+            background: #11131a;
+            border: 1px solid rgba(255,85,0,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff5500, #ffaa00);
+            box-shadow: 0 0 8px #ff5500;
+        }
+
+        /* Panel Derecho: Cuadrícula de Skins / Operadores */
+        .operator-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .operator-grid-item {
+            background: rgba(18, 21, 30, 0.85);
+            border: 1px solid rgba(255, 85, 0, 0.3);
+            border-radius: 6px;
+            height: 110px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .operator-grid-item:hover {
+            border-color: #ffaa00;
+            background: rgba(255, 85, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 85, 0, 0.4);
+        }
+
+        .operator-grid-item.selected {
+            border-color: #ffaa00;
+            border-width: 2px;
+            background: rgba(255, 85, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+        }
+
+        .operator-thumb-tag {
+            font-size: 0.65rem;
+            background: rgba(0, 0, 0, 0.75);
+            color: #ffaa00;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            align-self: flex-start;
+            text-transform: uppercase;
+        }
+
+        .operator-thumb-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+        }
+
+        /* Cuadrículas generales de Mapas e Items */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 15px;
+        }
+
+        .card-item {
+            background: rgba(20, 23, 32, 0.85);
+            border: 1px solid rgba(255, 85, 0, 0.3);
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-item:hover, .card-item.selected {
+            border-color: #ffaa00;
+            background: rgba(255, 85, 0, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 5px 20px rgba(255, 85, 0, 0.35);
+        }
+
+        .map-preview {
+            width: 100%;
+            height: 110px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 85, 0, 0.3);
+            display: flex;
+            align-items: flex-end;
+            padding: 8px;
+        }
+
+        .map-tag {
+            background: rgba(5, 6, 8, 0.85);
+            color: #ffaa00;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .card-body-content {
+            padding: 15px;
+            text-align: left;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+
+        .card-price {
+            color: #ffaa00;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        /* Ajustes de Sistema */
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .setting-slider, .setting-select {
+            width: 100%;
+            background: #141720;
+            border: 1px solid #ff5500;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .setting-slider {
+            accent-color: #ffaa00;
+            cursor: pointer;
+        }
+
+        .action-btn {
+            width: 100%;
+            background: #ff5500;
+            border: none;
+            color: #ffffff;
+            padding: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #ffaa00;
+            color: #050608;
+        }
+
+        .exit-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .exit-warning {
+            font-size: 1.1rem;
+            color: #ffaa00;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .exit-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* --- ADAPTABILIDAD MÓVIL --- */
+        @media (max-width: 768px) {
+            .ui-container {
+                padding: 20px;
+            }
+            .game-title {
+                font-size: 2.2rem;
+                letter-spacing: 3px;
+            }
+            .game-subtitle {
+                font-size: 0.7rem;
+                letter-spacing: 5px;
+            }
+            .menu-nav {
+                width: 100%;
+                max-width: 270px;
+                gap: 10px;
+            }
+            .menu-btn {
+                padding: 12px 18px;
+                font-size: 1rem;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+            .operator-hub {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<link rel="icon" href="favicon.svg"><style>.online-nav{position:relative;z-index:100;display:flex;flex-wrap:wrap;gap:14px;padding:14px 20px;background:#091624;color:#dceaff;border-bottom:1px solid #527887}.online-nav a{color:#b8ff65;text-decoration:none;font:13px system-ui}.online-nav span{margin-left:auto;font:12px system-ui;color:#6bdaff}</style><script src="js/api.js?v=11"></script><script defer src="js/sound.js?v=11"></script><link rel="stylesheet" href="mobile.css?v=11"><script defer src="js/mobile.js?v=11"></script><script defer src="js/menu-navigation.js?v=11"></script></head>
+<body><div id="onlineAccount" style="position:fixed;right:20px;top:18px;z-index:100;color:#b8ff65;font:13px system-ui">Cuenta desconectada</div>
+
+    <!-- Lienzo de fondo 3D de campo de batalla -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Interfaz Principal (Menú) -->
+    <div class="ui-container">
+        <header>
+            <h1 class="game-title">Shadowfront</h1>
+            <span class="game-subtitle">Warfare Command</span>
+        </header>
+
+        <nav class="menu-nav interactive"><button class="menu-btn" data-destination="cuenta.html?mode=login">Iniciar sesión</button><button class="menu-btn" data-destination="cuenta.html?mode=register">Registrarse</button>
+            <button class="menu-btn" data-destination="modos.html">Multijugador</button>
+            <button class="menu-btn" data-destination="modos.html">Mapas y Modos</button>
+            <button class="menu-btn" data-destination="tienda.html">Skins & Operadores</button>
+            <button class="menu-btn" data-destination="tienda.html">Intendencia</button>
+            <button class="menu-btn" data-modal="modal-ajustes">Ajustes</button>
+            <button class="menu-btn" data-modal="modal-salir">Salir</button>
+        </nav>
+
+        <div class="footer-info">
+            SEC-ALPHA // LIVE BATTLEFIELD v3.0
+        </div>
+    </div>
+
+<nav id="menuPad" class="menu-pad" aria-label="Seleccionar opción del menú"><button type="button" id="menuPrevious" aria-label="Opción anterior">▲</button><output id="menuSelection" aria-live="polite">Multijugador</output><button type="button" id="menuNext" aria-label="Opción siguiente">▼</button><button type="button" id="menuConfirm" aria-label="Abrir opción seleccionada">OK</button></nav>
+    <!-- --- MODALES / VENTANAS INTERACTIVAS --- -->
+
+    <!-- Modal Multijugador -->
+    <div id="modal-multijugador" class="modal-overlay">
+        <div class="modal-content interactive">
+            <div class="modal-header">
+                <h2 class="modal-title">Servidores de Guerra</h2>
+                <button class="close-modal-btn" onclick="closeModal('modal-multijugador')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="section-desc">Selecciona un tipo de escuadrón y entra al frente en tiempo real.</p>
+                <div class="grid-cards">
+                    <div class="card-item" onclick="alert('Buscando partida: Guerra Total 32v32...')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8)), radial-gradient(circle, #ff5500, #111);">
+                            <span class="map-tag">32v32</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Guerra Total</div>
+                            <div class="card-price">65ms • Servidor EU</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('Buscando partida: Asalto Táctico...')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8)), radial-gradient(circle, #2b322b, #0a0a0a);">
+                            <span class="map-tag">12v12</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Asalto Táctico</div>
+                            <div class="card-price">45ms • Servidor NA</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('Entrando a Duelo de Escuadras...')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8)), radial-gradient(circle, #331100, #050505);">
+                            <span class="map-tag">4v4</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Duelo de Escuadras</div>
+                            <div class="card-price">30ms • Servidor LATAM</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="action-btn" onclick="alert('Emparejamiento rápido activado...')">Búsqueda Rápida de Partida</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mapas y Modo Zombie (5 Mapas + Infección Zombie) -->
+    <div id="modal-mapas" class="modal-overlay">
+        <div class="modal-content interactive">
+            <div class="modal-header">
+                <h2 class="modal-title">Selección de Mapas & Modos</h2>
+                <button class="close-modal-btn" onclick="closeModal('modal-mapas')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="section-desc">Elige el sector del teatro de operaciones o sobrevive a la horda.</p>
+                <div class="grid-cards">
+                    <div class="card-item selected" onclick="alert('Mapa seleccionado: Frente Ruinas')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), linear-gradient(45deg, #441100, #1a1a1a);">
+                            <span class="map-tag">Multijugador</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">1. Frente Ruinas</div>
+                            <div class="card-price" style="color:#ff5500">Combate Urbano</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('Mapa seleccionado: Base Cero')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), linear-gradient(45deg, #112233, #0b0c10);">
+                            <span class="map-tag">Asalto</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">2. Base Cero</div>
+                            <div class="card-price" style="color:#ffaa00">Instalación Militar</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('Mapa seleccionado: Trinchera Sombra')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), linear-gradient(45deg, #222211, #0f0f0a);">
+                            <span class="map-tag">Nocturno</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">3. Trinchera Sombra</div>
+                            <div class="card-price" style="color:#ffaa00">Frente de Fuego</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('Mapa seleccionado: Sector Industrial')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), linear-gradient(45deg, #113322, #0d1a15);">
+                            <span class="map-tag">Estratégico</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">4. Sector Industrial</div>
+                            <div class="card-price" style="color:#ffaa00">Zona de Refinería</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('⚠️ MODO ZOMBIE SELECCIONADO: Preparando contención biológica...')">
+                        <div class="map-preview" style="background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.9)), linear-gradient(45deg, #330000, #200000);">
+                            <span class="map-tag" style="background:#800000; color:#ff9999;">Zombies / Horda</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">5. Infección: Búnker 7</div>
+                            <div class="card-price" style="color:#ff3333;">Modo Supervivencia</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="action-btn" onclick="alert('Configuración de mapa aplicada al escuadrón.')">Confirmar Despliegue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Skins & Operadores (Estilo COD Avanzado) -->
+    <div id="modal-arsenal" class="modal-overlay">
+        <div class="modal-content interactive">
+            <div class="modal-header">
+                <h2 class="modal-title">Gestión de Operadores & Skins</h2>
+                <button class="close-modal-btn" onclick="closeModal('modal-arsenal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="operator-hub">
+                    <!-- Panel Izquierdo: Ficha del Operador Seleccionado -->
+                    <div class="operator-profile-card">
+                        <div class="operator-hero-preview" id="preview-bg">
+                            <span class="operator-hero-name" id="active-op-name">VAL-SHIELD</span>
+                        </div>
+                        <div class="operator-stats-box">
+                            <div class="stat-row">
+                                <span class="stat-label">Resistencia Balística</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 85%;"></div></div>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Movilidad Táctica</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 75%;"></div></div>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Estabilidad de Armamento</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 90%;"></div></div>
+                            </div>
+                        </div>
+                        <button class="action-btn" style="margin-top:auto;" onclick="alert('¡Operador seleccionado con éxito para el despliegue!')">Equipar Operador</button>
+                    </div>
+
+                    <!-- Panel Derecho: Cuadrícula con todos los Operadores -->
+                    <div class="operator-grid-container">
+                        <div class="operator-grid-item selected" onclick="selectOperator('VAL-SHIELD', 'Épico', 0x1a1c22, 0xff5500, this)">
+                            <span class="operator-thumb-tag">Épico</span>
+                            <span class="operator-thumb-name">VAL-SHIELD</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('CYBER-VANGUARD', 'Legendario', 0x2d322b, 0x556b2f, this)">
+                            <span class="operator-thumb-tag" style="color:#d4af37">Legendario</span>
+                            <span class="operator-thumb-name">CYBER-VANG</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('SHADOW-STALKER', 'Raro', 0x111111, 0x00ffff, this)">
+                            <span class="operator-thumb-tag" style="color:#00ffff">Raro</span>
+                            <span class="operator-thumb-name">SHADOW-ST</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('GOLD-COMMANDER', 'Mítico', 0x330000, 0xd4af37, this)">
+                            <span class="operator-thumb-tag" style="color:#ffaa00">Mítico</span>
+                            <span class="operator-thumb-name">GOLD-CMD</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('NEON-REBEL', 'Épico', 0x1a0033, 0xaa00ff, this)">
+                            <span class="operator-thumb-tag">Épico</span>
+                            <span class="operator-thumb-name">NEON-REB</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('DESERT-FOX', 'Común', 0x332211, 0xffaa00, this)">
+                            <span class="operator-thumb-tag" style="color:#aaa">Común</span>
+                            <span class="operator-thumb-name">DESERT-FOX</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('ARCTIC-STORM', 'Raro', 0x112233, 0x00bbff, this)">
+                            <span class="operator-thumb-tag" style="color:#00bbff">Raro</span>
+                            <span class="operator-thumb-name">ARCTIC-ST</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('SCORCH-UNIT', 'Legendario', 0x331100, 0xff3300, this)">
+                            <span class="operator-thumb-tag" style="color:#d4af37">Legendario</span>
+                            <span class="operator-thumb-name">SCORCH-U</span>
+                        </div>
+                        <div class="operator-grid-item" onclick="selectOperator('STEALTH-OPS', 'Común', 0x0a0a0a, 0x555555, this)">
+                            <span class="operator-thumb-tag" style="color:#aaa">Común</span>
+                            <span class="operator-thumb-name">STEALTH-OP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tienda General (Ampliada con más compras) -->
+    <div id="modal-tienda" class="modal-overlay">
+        <div class="modal-content interactive">
+            <div class="modal-header">
+                <h2 class="modal-title">Intendencia / Tienda</h2>
+                <button class="close-modal-btn" onclick="closeModal('modal-tienda')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="section-desc">Adquiere suministros de guerra, divisas tácticas y lotes de operador.</p>
+                <div class="grid-cards">
+                    <div class="card-item" onclick="alert('¡Caja de Suministros Militar adquirida!')">
+                        <div class="map-preview" style="background: linear-gradient(45deg, #331100, #111);">
+                            <span class="map-tag">Cofre</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Caja Táctica I</div>
+                            <div class="card-price">🪙 1,500 Bonos</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('¡Lote de Munición Especial comprado!')">
+                        <div class="map-preview" style="background: linear-gradient(45deg, #003333, #111);">
+                            <span class="map-tag">Divisas</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Pack de Gemas</div>
+                            <div class="card-price">💎 350 Gemas</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('¡Pase de Combate Operativo activado!')">
+                        <div class="map-preview" style="background: linear-gradient(45deg, #332200, #111);">
+                            <span class="map-tag">Pase VIP</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Pase Operativo</div>
+                            <div class="card-price">⭐ Premium</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('¡Lote de Operador Sombra adquirido con éxito!')">
+                        <div class="map-preview" style="background: linear-gradient(45deg, #220033, #111);">
+                            <span class="map-tag">Paquete</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Lote Operador Sombra</div>
+                            <div class="card-price">💎 1,200 Gemas</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('¡Caja Legendaria de Armas abierta!')">
+                        <div class="map-preview" style="background: linear-gradient(45deg, #330033, #111);">
+                            <span class="map-tag">Legendario</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Caja Arma Legendaria</div>
+                            <div class="card-price">🪙 5,000 Bonos</div>
+                        </div>
+                    </div>
+                    <div class="card-item" onclick="alert('¡Suministros Médicos comprados!')">
+                        <div class="map-preview" style="background: linear-gradient(45deg, #003300, #111);">
+                            <span class="map-tag">Suministros</span>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="card-title">Kit de Campaña x10</div>
+                            <div class="card-price">🪙 800 Bonos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajustes -->
+    <div id="modal-ajustes" class="modal-overlay">
+        <div class="modal-content interactive">
+            <div class="modal-header">
+                <h2 class="modal-title">Ajustes de Sistema</h2>
+                <button class="close-modal-btn" onclick="closeModal('modal-ajustes')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <div class="setting-label"><span>Volumen de Combate</span> <span id="vol-val">85%</span></div>
+                    <input type="range" class="setting-slider" min="0" max="100" value="85" oninput="document.getElementById('vol-val').innerText = this.value + '%'">
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label"><span>Calidad Gráfica del Campo 3D</span></div>
+                    <select class="setting-select">
+                        <option>Ultra (Efectos de Guerra Avanzados)</option>
+                        <option selected>Equilibrado (Recomendado)</option>
+                        <option>Rendimiento (Optimizado para Móvil)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label"><span>Sensibilidad de Apuntado</span> <span id="sens-val">2.8</span></div>
+                    <input type="range" class="setting-slider" min="0.5" max="5.0" step="0.1" value="2.8" oninput="document.getElementById('sens-val').innerText = this.value">
+                </div>
+                <button class="action-btn" onclick="alert('Configuración guardada en el servidor.'); closeModal('modal-ajustes');">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Salir -->
+    <div id="modal-salir" class="modal-overlay">
+        <div class="modal-content interactive" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Abandonar Puesto</h2>
+                <button class="close-modal-btn" onclick="closeModal('modal-salir')">&times;</button>
+            </div>
+            <div class="modal-body exit-container">
+                <p class="exit-warning">¿Estás seguro de que deseas cerrar la sesión y abandonar el centro de comando de Shadowfront?</p>
+                <div class="exit-actions" style="display: flex; gap: 10px;">
+                    <button class="action-btn" style="background: #333; margin-top:0;" onclick="closeModal('modal-salir')">Cancelar</button>
+                    <button class="action-btn" style="background: #cc2200; margin-top:0;" onclick="window.close(); alert('Sesión finalizada. Puedes cerrar esta pestaña.');">Salir del Juego</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importar Three.js desde CDN -->
+    <script src="js/three.min.js"></script>
+    <script>
+        // --- CONTROL DE MODALES ---
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // --- CONFIGURACIÓN DE THREE.JS: CAMPO DE BATALLA + PLATAFORMA ---
+        const canvas = document.getElementById('bg-canvas');
+        const scene = new THREE.Scene();
+
+        scene.fog = new THREE.FogExp2(0x050608, 0.03);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0.6, 7.2);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, matchMedia('(pointer:coarse)').matches?1:1.5));
+
+        // --- ILUMINACIÓN TÁCTICA ---
+        const ambientLight = new THREE.AmbientLight(0x1a1d26, 1.2);
+        scene.add(ambientLight);
+
+        const fireLight = new THREE.PointLight(0xff4500, 3.5, 25);
+        fireLight.position.set(-6, -2, 2);
+        scene.add(fireLight);
+
+        const platformLight = new THREE.PointLight(0xffaa00, 3, 10);
+        platformLight.position.set(0, 2, 2);
+        scene.add(platformLight);
+
+        // --- ENTORNO: SUELO Y PLATAFORMA CIRCULAR ---
+        const battlefieldGroup = new THREE.Group();
+
+        const groundGeo = new THREE.PlaneGeometry(40, 40, 16, 16);
+        const groundMat = new THREE.MeshStandardMaterial({
+            color: 0x121419,
+            roughness: 0.9,
+            metalness: 0.2
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -2.5;
+        battlefieldGroup.add(ground);
+
+        // Plataforma circular de inspección estilo Call of Duty
+        const platformGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.2, 32);
+        const platformMat = new THREE.MeshStandardMaterial({
+            color: 0x1c1f26,
+            roughness: 0.4,
+            metalness: 0.85
+        });
+        const platform = new THREE.Mesh(platformGeo, platformMat);
+        platform.position.set(0.5, -1.9, 0);
+        battlefieldGroup.add(platform);
+
+        const ringGeo = new THREE.RingGeometry(1.9, 2.0, 32);
+        ringGeo.rotateX(-Math.PI / 2);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xff5500, side: THREE.DoubleSide });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.set(0.5, -1.79, 0);
+        battlefieldGroup.add(ring);
+
+        scene.add(battlefieldGroup);
+
+        // --- OBJETO 3D EN LA PLATAFORMA ---
+        const weaponGroup = new THREE.Group();
+
+        const metalMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x1a1c22, 
+            roughness: 0.35, 
+            metalness: 0.85 
+        });
+
+        const gunMetal = new THREE.MeshStandardMaterial({ 
+            color: 0x2b2f38, 
+            roughness: 0.25, 
+            metalness: 0.95 
+        });
+
+        const accentMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xff5500, 
+            roughness: 0.2, 
+            metalness: 0.6,
+            emissive: 0x551100,
+            emissiveIntensity: 0.4
+        });
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.45, 0.35), metalMaterial);
+        weaponGroup.add(body);
+
+        const barrelGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.2, 16);
+        barrelGeo.rotateZ(Math.PI / 2);
+        const barrel = new THREE.Mesh(barrelGeo, gunMetal);
+        barrel.position.set(2.4, 0.08, 0);
+        weaponGroup.add(barrel);
+
+        const mag = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.25), metalMaterial);
+        mag.position.set(0.4, -0.75, 0);
+        mag.rotation.z = -0.15;
+        weaponGroup.add(mag);
+
+        weaponGroup.position.set(0.5, -0.4, 0);
+        weaponGroup.rotation.x = 0.2;
+        weaponGroup.rotation.y = -0.55;
+        scene.add(weaponGroup);
+
+        // Función interactiva al seleccionar operadores
+        function selectOperator(name, rarity, mainColor, accentColor, element) {
+            document.getElementById('active-op-name').innerText = name;
+            document.getElementById('preview-bg').style.background = `radial-gradient(circle, #${accentColor.toString(16)} 0%, #111 75%)`;
+
+            metalMaterial.color.setHex(mainColor);
+            accentMaterial.color.setHex(accentColor);
+            accentMaterial.emissive.setHex(accentColor);
+
+            document.querySelectorAll('.operator-grid-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // --- PARTÍCULAS ---
+        const particlesCount = 250;
+        const particlesGeo = new THREE.BufferGeometry();
+        const particlesPos = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i += 3) {
+            particlesPos[i] = (Math.random() - 0.5) * 22;
+            particlesPos[i+1] = (Math.random() - 0.5) * 16;
+            particlesPos[i+2] = (Math.random() - 0.5) * 18;
+        }
+
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
+        const particlesMat = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0xff5500,
+            transparent: true,
+            opacity: 0.7,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particleSystem = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particleSystem);
+
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            weaponGroup.rotation.y = -0.55 + Math.sin(elapsedTime * 0.8) * 0.15;
+            weaponGroup.position.y = -0.4 + Math.sin(elapsedTime * 1.2) * 0.06;
+
+            const positions = particlesGeo.attributes.position.array;
+            for(let i = 1; i < particlesCount * 3; i += 3) {
+                positions[i] += 0.006;
+                if(positions[i] > 8) positions[i] = -8;
+            }
+            particlesGeo.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+<script>BFAPI.request('profile').then(v=>{document.getElementById('onlineAccount').textContent=v.profile.name+' · '+v.profile.balance+' monedas'}).catch(()=>{});</script></body>
+</html>

@@ -1,0 +1,14 @@
+'use strict';
+const {createHash}=require('node:crypto');
+const {EventEmitter}=require('node:events');
+// Small RFC 6455 transport for browser clients, with bounded payloads and fragmentation.
+class Peer extends EventEmitter {
+ constructor(socket,head){super();this.socket=socket;this.buf=Buffer.alloc(0);this.fragments=[];this.fragmentBytes=0;this.op=0;this.closed=false;socket.on('data',b=>this.read(b));socket.on('end',()=>socket.destroy());socket.on('close',()=>{this.closed=true;this.emit('close')});socket.on('error',()=>this.close());if(head.length)setImmediate(()=>this.read(head));}
+ frame(op,b){if(this.closed||this.socket.writableLength>262144)return this.close();b=Buffer.isBuffer(b)?b:Buffer.from(b);let h;if(b.length<126){h=Buffer.from([128|op,b.length])}else{h=Buffer.alloc(4);h[0]=128|op;h[1]=126;h.writeUInt16BE(b.length,2)}this.socket.write(Buffer.concat([h,b]));}
+ send(data){const b=Buffer.from(JSON.stringify(data));if(b.length<=65535)this.frame(1,b);}
+ ping(){this.frame(9,Buffer.alloc(0))}
+ close(){if(this.closed)return;this.closed=true;this.socket.end(Buffer.from([136,0]));setTimeout(()=>this.socket.destroy(),1000).unref();}
+ read(b){this.buf=Buffer.concat([this.buf,b]);while(this.buf.length>=2){const f=this.buf[0],masked=this.buf[1]&128;let n=this.buf[1]&127,h=2;if(f&112||!masked)return this.close();if(n===126){if(this.buf.length<4)return;n=this.buf.readUInt16BE(2);h=4}else if(n===127){if(this.buf.length<10)return;const big=this.buf.readBigUInt64BE(2);if(big>65536n)return this.close();n=Number(big);h=10}if(n>65536)return this.close();if(this.buf.length<h+4+n)return;const mask=this.buf.subarray(h,h+4),data=Buffer.from(this.buf.subarray(h+4,h+4+n));this.buf=this.buf.subarray(h+4+n);for(let i=0;i<n;i++)data[i]^=mask[i%4];const op=f&15,fin=!!(f&128);if(op>=8){if(!fin||n>125)return this.close();if(op===8)return this.close();if(op===9)this.frame(10,data);if(op===10)this.emit('pong');continue}if(op===1){if(this.op)return this.close();this.op=1}else if(op!==0||!this.op)return this.close();this.fragments.push(data);this.fragmentBytes+=n;if(this.fragmentBytes>65536)return this.close();if(fin){const message=Buffer.concat(this.fragments).toString('utf8');this.fragments=[];this.fragmentBytes=0;this.op=0;try{this.emit('message',JSON.parse(message))}catch{this.close()}}}}
+}
+function upgrade(req,socket,head){const key=req.headers['sec-websocket-key'];if(!key||req.headers['sec-websocket-version']!=='13'||req.headers.upgrade?.toLowerCase()!=='websocket'){socket.destroy();return null}const accept=createHash('sha1').update(key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: '+accept+'\r\n\r\n');return new Peer(socket,head)}
+module.exports={upgrade};
